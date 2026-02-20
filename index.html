@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My AI Website</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="chat-container">
+  <h2>Ask Our Website AI</h2>
+
+  <div id="chat-box"></div>
+
+  <div class="input-area">
+    <input type="text" id="question" placeholder="Type your question..." />
+    <button onclick="askAI()">Send</button>
+  </div>
+</div>
+
+<script>
+
+async function askAI() {
+  const input = document.getElementById("question");
+  const question = input.value.trim();
+  if (!question) return;
+
+  const chatBox = document.getElementById("chat-box");
+
+  // Show user message
+  chatBox.innerHTML += `<div class="user">${question}</div>`;
+  input.value = "";
+
+  // Create empty AI message bubble
+  const aiMessageDiv = document.createElement("div");
+  aiMessageDiv.className = "ai";
+  chatBox.appendChild(aiMessageDiv);
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  try {
+    const res = await fetch("ask.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })
+    });
+
+    const data = await res.json();
+
+    if (!data.response) {
+      aiMessageDiv.innerText = "Error getting response";
+      return;
+    }
+
+    // Word-by-word typing effect
+    const words = data.response.split(" ");
+    let index = 0;
+
+    function typeWord() {
+      if (index < words.length) {
+        aiMessageDiv.innerHTML += words[index] + " ";
+        index++;
+        chatBox.scrollTop = chatBox.scrollHeight;
+        setTimeout(typeWord, 35); // typing speed
+      }
+    }
+
+    typeWord();
+
+  } catch (error) {
+    aiMessageDiv.innerText = "Server error occurred";
+  }
+}
+
+
+// ✅ Press Enter to Send Message
+document.getElementById("question").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") {
+    askAI();
+  }
+});
+
+</script>
+
+</body>
+</html>
